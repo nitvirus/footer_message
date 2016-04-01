@@ -1,0 +1,38 @@
+<?php
+/**
+* @file
+ * This module provides a configurable footer message as a block.
+ */
+
+/**
+ * Implements hook_form_FORM_ID_alter()
+ */
+function footer_message_form_system_site_information_settings_alter(&$form, &$form_state, $form_id) {
+  // Add a footer text area to the "Site Information" admin page.
+  // Note the use of Drupal 7's new "text format" property, described
+  // http://drupal.org/update/modules/6/7#text_format. Note that both the
+  // value of this 'footer_message_msg' textarea and its filter format are
+  // stored as a serial value in the variables table.
+  $site_footer = \Drupal::config('footer_message.settings')->get('footer_message_msg', 'This is default site footer content.');
+  $form['footer_message_msg'] = array(
+    '#type' => 'text_format',
+    '#base_type' => 'textarea',
+    '#title' => t('Site Footer message'),
+    '#default_value' => $site_footer['value'],
+    '#format' => isset($site_footer['format']) ? $site_footer['format'] : NULL,
+  );
+    //setting a submit handler for the form
+  $form['#submit'][] = 'footer_message_form_submit';
+}
+
+ /**
+  * Implements hook_preprocess_HOOK()
+  */
+
+ function footer_message_preprocess_page(&$variables) {
+   // Provide $footer_message as a theme variable to hook_preprocess_page() and page.tpl.php.
+   // Note that we apply filter format before outputting HTML.
+   $site_footer = \Drupal::config('footer_message.settings')->get('footer_message_msg');  
+   $format = isset($site_footer['format']) ? $site_footer['format'] : NULL;
+   $variables['footer_message'] = check_markup($site_footer['value'], $format);
+ }
